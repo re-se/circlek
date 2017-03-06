@@ -20641,13 +20641,15 @@ this.Payment = (function(superClass) {
     this.state = {
       user: [],
       target: null,
-      amount: 0
+      amount: 0,
+      date: new Date()
     };
   }
 
   Payment.prototype.componentDidMount = function() {
     var form;
     $(".ui.fluid.dropdown").dropdown();
+    $('.ui.checkbox').checkbox();
     form = $(".ui.form");
     return form.form({
       fields: {
@@ -20656,7 +20658,7 @@ this.Payment = (function(superClass) {
       },
       onSuccess: function(e) {
         e.preventDefault();
-        return form.form("clear");
+        return form.form("reset");
       }
     });
   };
@@ -20664,24 +20666,35 @@ this.Payment = (function(superClass) {
   Payment.prototype.componentWillUnmount = function() {};
 
   Payment.prototype.onSubmit = function(e) {
-    var i, len, ref, user, val;
+    var date, i, len, ref, user, v, val;
     e.preventDefault();
-    console.log($(".ui.form").form("get values"));
+    v = $(".ui.form").form("get values");
     val = [];
+    date = v.notUseDate ? null : v.year + "/" + v.month + "/" + v.date;
     ref = this.state.user;
     for (i = 0, len = ref.length; i < len; i++) {
       user = ref[i];
-      val.push([user, this.props.users[user][0], this.state.target, Math.floor(this.state.amount / this.state.user.length)]);
+      val.push([user, this.props.users[user][0], this.state.target, Math.floor(this.state.amount / this.state.user.length), date]);
     }
     return insertData(Cookies.get("sid"), this.props.sheet, val);
   };
 
   Payment.prototype.onChange = function() {
-    return this.setState($(".ui.form").form("get values"));
+    var s, v;
+    v = $(".ui.form").form("get values");
+    s = {};
+    s.user = v.user;
+    s.target = v.target;
+    s.amount = v.amount;
+    if (!v.notUseDate) {
+      s.date = new Date(+v.year, +v.month - 1, +v.date);
+    }
+    console.log(s);
+    return this.setState(s);
   };
 
   Payment.prototype.render = function() {
-    var id, n, ref, users;
+    var d, date, day, id, l, m, month, n, now, ref, users, y, year, yy;
     id = 0;
     users = this.props.users.map(function(user) {
       return React.createElement("option", {
@@ -20689,6 +20702,41 @@ this.Payment = (function(superClass) {
       }, user);
     });
     n = ((ref = this.state.user) != null ? ref.length : void 0) > 0 ? this.state.user.length : 1;
+    now = new Date();
+    date = this.state.date;
+    year = (function() {
+      var i, results;
+      results = [];
+      for (y = i = 0; i <= 10; y = ++i) {
+        yy = +now.getFullYear() - y;
+        results.push(React.createElement("option", {
+          "value": yy
+        }, yy));
+      }
+      return results;
+    })();
+    month = (function() {
+      var i, results;
+      results = [];
+      for (m = i = 1; i <= 12; m = ++i) {
+        results.push(React.createElement("option", {
+          "value": m
+        }, m));
+      }
+      return results;
+    })();
+    l = (new Date(+date.getFullYear(), date.getMonth() + 1, 0)).getDate();
+    console.log(l);
+    day = (function() {
+      var i, ref1, results;
+      results = [];
+      for (d = i = 1, ref1 = l; 1 <= ref1 ? i <= ref1 : i >= ref1; d = 1 <= ref1 ? ++i : --i) {
+        results.push(React.createElement("option", {
+          "value": d
+        }, d));
+      }
+      return results;
+    })();
     return React.createElement("div", null, React.createElement("div", {
       "className": "ui header"
     }, "支払"), React.createElement("form", {
@@ -20716,12 +20764,49 @@ this.Payment = (function(superClass) {
       "name": "amount",
       "placeholder": "金額"
     })), React.createElement("div", {
-      "className": "amounts inline"
+      "className": "amounts"
     }, React.createElement("span", null, "一人当たりの金額 : "), React.createElement("span", {
       "style": {
         "fontWeight": "bold"
       }
     }, +this.state.amount / n), React.createElement("span", null, " 円")), React.createElement("div", {
+      "className": "ui hidden divider"
+    }), React.createElement("div", {
+      "className": "field"
+    }, React.createElement("label", null, "日付"), React.createElement("div", {
+      "className": "three fields"
+    }, React.createElement("div", {
+      "className": "field"
+    }, React.createElement("select", {
+      "className": "ui fluid dropdown",
+      "name": "year",
+      "defaultValue": now.getFullYear()
+    }, React.createElement("option", {
+      "value": ""
+    }, "Year"), year)), React.createElement("div", {
+      "className": "field"
+    }, React.createElement("select", {
+      "className": "ui fluid dropdown",
+      "name": "month",
+      "defaultValue": now.getMonth() + 1
+    }, React.createElement("option", {
+      "value": ""
+    }, "Month"), month)), React.createElement("div", {
+      "className": "field"
+    }, React.createElement("select", {
+      "className": "ui fluid dropdown",
+      "name": "date",
+      "defaultValue": now.getDate()
+    }, React.createElement("option", {
+      "value": ""
+    }, "Date"), day))), React.createElement("div", {
+      "className": "field"
+    }, React.createElement("div", {
+      "className": "ui checkbox"
+    }, React.createElement("input", {
+      "type": "checkbox",
+      "name": "notUseDate"
+    }), React.createElement("label", null, "日付を使用しない")))), React.createElement("div", {
       "className": "ui divider"
     }), React.createElement("button", {
       "type": "submit",
