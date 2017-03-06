@@ -20642,14 +20642,15 @@ this.Payment = (function(superClass) {
       user: [],
       target: null,
       amount: 0,
-      date: new Date()
+      date: new Date(),
+      useDate: true
     };
   }
 
   Payment.prototype.componentDidMount = function() {
     var form;
     $(".ui.fluid.dropdown").dropdown();
-    $('.ui.checkbox').checkbox();
+    $('.ui.checkbox').checkbox('setting', 'onChange', this.onChange);
     form = $(".ui.form");
     return form.form({
       fields: {
@@ -20666,11 +20667,10 @@ this.Payment = (function(superClass) {
   Payment.prototype.componentWillUnmount = function() {};
 
   Payment.prototype.onSubmit = function(e) {
-    var date, i, len, ref, user, v, val;
+    var date, i, len, ref, user, val;
     e.preventDefault();
-    v = $(".ui.form").form("get values");
     val = [];
-    date = v.notUseDate ? null : v.year + "/" + v.month + "/" + v.date;
+    date = this.state.useDate ? v.year + "/" + v.month + "/" + v.date : null;
     ref = this.state.user;
     for (i = 0, len = ref.length; i < len; i++) {
       user = ref[i];
@@ -20689,12 +20689,13 @@ this.Payment = (function(superClass) {
     if (!v.notUseDate) {
       s.date = new Date(+v.year, +v.month - 1, +v.date);
     }
+    s.useDate = !v.notUseDate;
     console.log(s);
     return this.setState(s);
   };
 
   Payment.prototype.render = function() {
-    var d, date, day, id, l, m, month, n, now, ref, users, y, year, yy;
+    var d, date, dateClass, day, id, l, m, month, n, now, ref, users, y, year, yy;
     id = 0;
     users = this.props.users.map(function(user) {
       return React.createElement("option", {
@@ -20737,6 +20738,10 @@ this.Payment = (function(superClass) {
       }
       return results;
     })();
+    dateClass = "field";
+    if (!this.state.useDate) {
+      dateClass += " disabled";
+    }
     return React.createElement("div", null, React.createElement("div", {
       "className": "ui header"
     }, "支払"), React.createElement("form", {
@@ -20776,7 +20781,7 @@ this.Payment = (function(superClass) {
     }, React.createElement("label", null, "日付"), React.createElement("div", {
       "className": "three fields"
     }, React.createElement("div", {
-      "className": "field"
+      "className": dateClass
     }, React.createElement("select", {
       "className": "ui fluid dropdown",
       "name": "year",
@@ -20784,7 +20789,7 @@ this.Payment = (function(superClass) {
     }, React.createElement("option", {
       "value": ""
     }, "Year"), year)), React.createElement("div", {
-      "className": "field"
+      "className": dateClass
     }, React.createElement("select", {
       "className": "ui fluid dropdown",
       "name": "month",
@@ -20792,21 +20797,26 @@ this.Payment = (function(superClass) {
     }, React.createElement("option", {
       "value": ""
     }, "Month"), month)), React.createElement("div", {
-      "className": "field"
+      "className": dateClass
     }, React.createElement("select", {
       "className": "ui fluid dropdown",
       "name": "date",
       "defaultValue": now.getDate()
     }, React.createElement("option", {
       "value": ""
-    }, "Date"), day))), React.createElement("div", {
+    }, "Date"), day)))), React.createElement("div", {
       "className": "field"
     }, React.createElement("div", {
       "className": "ui checkbox"
     }, React.createElement("input", {
       "type": "checkbox",
-      "name": "notUseDate"
-    }), React.createElement("label", null, "日付を使用しない")))), React.createElement("div", {
+      "name": "notUseDate",
+      "tabIndex": "0",
+      "className": "hidden",
+      "id": "usedate"
+    }), React.createElement("label", {
+      "htmlFor": "usedate"
+    }, "日付を使用しない"))), React.createElement("div", {
       "className": "ui divider"
     }), React.createElement("button", {
       "type": "submit",
