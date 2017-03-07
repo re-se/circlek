@@ -20809,7 +20809,7 @@ this.Payment = (function(superClass) {
     }), React.createElement("div", {
       "className": "field"
     }, React.createElement("label", null, "日付"), React.createElement("div", {
-      "className": "three fields"
+      "className": "inline three fields"
     }, React.createElement("div", {
       "className": dateClass
     }, React.createElement("select", {
@@ -21024,7 +21024,8 @@ Top = (function(superClass) {
     }).call(this);
     return React.createElement("div", {
       "style": {
-        "margin": "7em"
+        "margin": "3em",
+        "margin-top": "7em"
       }
     }, React.createElement(Menu, {
       "current": this.state.current,
