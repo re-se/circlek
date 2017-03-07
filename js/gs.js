@@ -1,6 +1,10 @@
-var GoogleAuth, currentApiRequest, getDriveFileList, getSpreadSheets, handleAuthClick, handleClientLoad, initClient, insertData, isAuthorized, sendAuthorizedApiRequest, test, updateSigninStatus;
+var GoogleAuth, currentApiRequest, defaultCallback, getDriveFileList, getSpreadSheets, handleAuthClick, handleClientLoad, initClient, insertData, insertRaws, isAuthorized, sendAuthorizedApiRequest, test, updateSigninStatus;
 
 GoogleAuth = null;
+
+defaultCallback = function(res) {
+  return console.log(res);
+};
 
 handleClientLoad = function(cb) {
   return gapi.load('client:auth2', function() {
@@ -60,25 +64,22 @@ test = function() {
 
 getDriveFileList = function(cb) {
   if (cb == null) {
-    cb = function(res) {
-      return console.log(res);
-    };
+    cb = defaultCallback;
   }
   return gapi.client.drive.files.list().then(cb);
 };
 
 getSpreadSheets = function(id, cb) {
-  var sheets;
   if (cb == null) {
-    cb = function() {};
+    cb = defaultCallback;
   }
-  sheets = [];
   return gapi.client.sheets.spreadsheets.get({
     spreadsheetId: id
   }).then(function(res) {
-    var ps;
+    var ps, sheets;
+    sheets = [];
     ps = res.result.sheets.map(function(s) {
-      sheets.push(s.properties.title);
+      sheets.push(s.properties);
       return gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: id,
         range: s.properties.title
@@ -92,15 +93,35 @@ getSpreadSheets = function(id, cb) {
 
 insertData = function(id, range, values, cb) {
   if (cb == null) {
-    cb = function(res) {
-      return console.log(res);
-    };
+    cb = defaultCallback;
   }
   return gapi.client.sheets.spreadsheets.values.append({
     spreadsheetId: id,
-    insertDataOption: "INSERT_ROWS",
+    insertDataOption: "OVERWRITE",
     range: range,
     values: values,
     valueInputOption: "RAW"
+  }).then(cb);
+};
+
+insertRaws = function(id, sheetId, start, end, cb) {
+  if (cb == null) {
+    cb = defaultCallback;
+  }
+  return gapi.client.sheets.spreadsheets.batchUpdate({
+    "spreadsheetId": id,
+    "requests": [
+      {
+        "insertDimension": {
+          "range": {
+            "sheetId": sheetId,
+            "dimension": "ROWS",
+            "startIndex": start,
+            "endIndex": end
+          },
+          "inheritFromBefore": false
+        }
+      }
+    ]
   }).then(cb);
 };

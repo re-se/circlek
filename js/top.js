@@ -20576,10 +20576,14 @@ this.Menu = (function(superClass) {
     Menu.__super__.constructor.call(this, props);
   }
 
+  Menu.prototype.componentDidUpdate = function() {
+    return $(".ui.dropdown").dropdown();
+  };
+
   Menu.prototype.render = function() {
     var cname, i, len, name, ref;
     cname = {};
-    if (this.props.current === "start") {
+    if (this.props.current === "start" || !this.props.hasSID) {
       return React.createElement("div", {
         "className": "ui top fixed inverted menu"
       });
@@ -20615,7 +20619,29 @@ this.Menu = (function(superClass) {
             return _this.props.onclick("clearing");
           };
         })(this))
-      }, "清算"));
+      }, "清算"), React.createElement("div", {
+        "className": "right menu"
+      }, React.createElement("div", {
+        "className": "ui icon dropdown item"
+      }, React.createElement("i", {
+        "className": "content icon"
+      }), React.createElement("div", {
+        "className": "ui inverted menu"
+      }, React.createElement("a", {
+        "className": "ui item",
+        "onClick": ((function(_this) {
+          return function() {
+            return _this.props.onclick("select");
+          };
+        })(this))
+      }, "他のスプレッドシートを選択"), React.createElement("a", {
+        "className": "ui item",
+        "onClick": ((function(_this) {
+          return function() {
+            return GoogleAuth.signOut().then(_this.props.onclick("start"));
+          };
+        })(this))
+      }, "ログアウト")))));
     }
   };
 
@@ -20667,16 +20693,22 @@ this.Payment = (function(superClass) {
   Payment.prototype.componentWillUnmount = function() {};
 
   Payment.prototype.onSubmit = function(e) {
-    var date, i, len, ref, user, val;
+    var d, date, i, len, ref, sid, user, val;
     e.preventDefault();
     val = [];
-    date = this.state.useDate ? v.year + "/" + v.month + "/" + v.date : null;
+    d = $(".ui.form").form("get values");
+    date = this.state.useDate ? d.year + "/" + d.month + "/" + d.date : null;
     ref = this.state.user;
     for (i = 0, len = ref.length; i < len; i++) {
       user = ref[i];
-      val.push([user, this.props.users[user][0], this.state.target, Math.floor(this.state.amount / this.state.user.length), date]);
+      val.push([user, this.props.users[user], this.state.target, Math.floor(this.state.amount / this.state.user.length), date]);
     }
-    return insertData(Cookies.get("sid"), this.props.sheet, val);
+    sid = Cookies.get("sid");
+    return insertRaws(sid, this.props.sheet.sheetId, 0, 1, (function(_this) {
+      return function() {
+        return insertData(sid, _this.props.sheet.title + "!A1", val);
+      };
+    })(this));
   };
 
   Payment.prototype.onChange = function() {
@@ -20690,7 +20722,6 @@ this.Payment = (function(superClass) {
       s.date = new Date(+v.year, +v.month - 1, +v.date);
     }
     s.useDate = !v.notUseDate;
-    console.log(s);
     return this.setState(s);
   };
 
@@ -20727,7 +20758,6 @@ this.Payment = (function(superClass) {
       return results;
     })();
     l = (new Date(+date.getFullYear(), date.getMonth() + 1, 0)).getDate();
-    console.log(l);
     day = (function() {
       var i, ref1, results;
       results = [];
@@ -20879,12 +20909,21 @@ Top = (function(superClass) {
     }
     return getSpreadSheets(sid, (function(_this) {
       return function(sheets, f) {
+        var amount, i, len, ref, user, users;
         console.log(f);
+        users = [];
+        amount = [];
+        ref = f[0].result.values;
+        for (i = 0, len = ref.length; i < len; i++) {
+          user = ref[i];
+          users.push(user[0]);
+          amount.push(user[1]);
+        }
         return _this.setState({
           sheets: sheets,
-          users: f[0].result.values,
-          data: f[1].result.values.slice(1),
-          amount: f[1].result.values[0]
+          users: users,
+          data: f[1].result.values,
+          amount: amount
         });
       };
     })(this));
@@ -20898,26 +20937,36 @@ Top = (function(superClass) {
   };
 
   Top.prototype.changeCurrent = function(current) {
-    if (current === "home") {
-      if (this.state.sid != null) {
-        this.getSpreadSheets();
-      } else {
-        getDriveFileList((function(_this) {
-          return function(res) {
-            var fs;
-            fs = res.result.files.filter(function(f) {
-              return f.mimeType === "application/vnd.google-apps.spreadsheet";
-            });
-            return _this.setState({
-              files: fs
-            });
-          };
-        })(this));
+    if (current === "select") {
+      return this.setState({
+        sid: null
+      }, (function(_this) {
+        return function() {
+          return _this.changeCurrent("home");
+        };
+      })(this));
+    } else {
+      if (current === "home") {
+        if (this.state.sid != null) {
+          this.getSpreadSheets();
+        } else {
+          getDriveFileList((function(_this) {
+            return function(res) {
+              var fs;
+              fs = res.result.files.filter(function(f) {
+                return f.mimeType === "application/vnd.google-apps.spreadsheet";
+              });
+              return _this.setState({
+                files: fs
+              });
+            };
+          })(this));
+        }
       }
+      return this.setState({
+        current: current
+      });
     }
-    return this.setState({
-      current: current
-    });
   };
 
   Top.prototype.render = function() {
@@ -20979,6 +21028,7 @@ Top = (function(superClass) {
       }
     }, React.createElement(Menu, {
       "current": this.state.current,
+      "hasSID": (this.state.sid != null),
       "onclick": this.changeCurrent
     }), items);
   };
