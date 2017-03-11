@@ -1,4 +1,4 @@
-var GoogleAuth, currentApiRequest, defaultCallback, getDriveFileList, getSpreadSheets, handleAuthClick, handleClientLoad, initClient, insertData, insertRaws, isAuthorized, sendAuthorizedApiRequest, test, updateSigninStatus;
+var GoogleAuth, currentApiRequest, defaultCallback, getDriveFileList, getSpreadSheets, handleAuthClick, handleClientLoad, initClient, insertData, insertRows, isAuthorized, sendAuthorizedApiRequest, test, update, updateColumns, updateRows, updateSigninStatus;
 
 GoogleAuth = null;
 
@@ -104,7 +104,38 @@ insertData = function(id, range, values, cb) {
   }).then(cb);
 };
 
-insertRaws = function(id, sheetId, start, end, cb) {
+update = function(id, range, values, dir, cb) {
+  if (cb == null) {
+    cb = defaultCallback;
+  }
+  return gapi.client.sheets.spreadsheets.values.batchUpdate({
+    "spreadsheetId": id,
+    "valueInputOption": "RAW",
+    "data": [
+      {
+        "range": range,
+        "values": values,
+        "majorDimension": dir
+      }
+    ]
+  }).then(cb);
+};
+
+updateRows = function(id, range, values, cb) {
+  if (cb == null) {
+    cb = defaultCallback;
+  }
+  return update(id, range, values, "ROWS", cb);
+};
+
+updateColumns = function(id, range, values, cb) {
+  if (cb == null) {
+    cb = defaultCallback;
+  }
+  return update(id, range, values, "COLUMNS", cb);
+};
+
+insertRows = function(id, sheetId, start, end, cb) {
   if (cb == null) {
     cb = defaultCallback;
   }

@@ -20495,6 +20495,43 @@ var React,
 
 React = require('react');
 
+this.Clearing = (function(superClass) {
+  extend(Clearing, superClass);
+
+  function Clearing(props) {
+    Clearing.__super__.constructor.call(this, props);
+  }
+
+  Clearing.prototype.render = function() {
+    var i, items;
+    i = 0;
+    items = this.props.users.map((function(_this) {
+      return function(user) {
+        return React.createElement("tr", null, React.createElement("td", {
+          "className": ""
+        }, user), React.createElement("td", {
+          "className": ""
+        }, _this.props.amount[i++]));
+      };
+    })(this));
+    return React.createElement("div", {
+      "className": "data"
+    }, React.createElement("table", {
+      "className": "ui celled table"
+    }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", null, "ユーザ"), React.createElement("th", null, "未払い金額"))), items));
+  };
+
+  return Clearing;
+
+})(React.Component);
+
+},{"react":178}],180:[function(require,module,exports){
+var React,
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty;
+
+React = require('react');
+
 this.Data = (function(superClass) {
   extend(Data, superClass);
 
@@ -20515,16 +20552,18 @@ this.Data = (function(superClass) {
         }, f[3]));
       };
     })(this));
-    return React.createElement("table", {
+    return React.createElement("div", {
+      "className": "data"
+    }, React.createElement("table", {
       "className": "ui celled table"
-    }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", null, "払った人"), React.createElement("th", null, "項目"), React.createElement("th", null, "金額"))), items);
+    }, React.createElement("thead", null, React.createElement("tr", null, React.createElement("th", null, "払った人"), React.createElement("th", null, "項目"), React.createElement("th", null, "金額"))), items));
   };
 
   return Data;
 
 })(React.Component);
 
-},{"react":178}],180:[function(require,module,exports){
+},{"react":178}],181:[function(require,module,exports){
 var React,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -20562,7 +20601,7 @@ this.Files = (function(superClass) {
 
 })(React.Component);
 
-},{"react":178}],181:[function(require,module,exports){
+},{"react":178}],182:[function(require,module,exports){
 var React,
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -20583,7 +20622,7 @@ this.Menu = (function(superClass) {
   Menu.prototype.render = function() {
     var cname, i, len, name, ref;
     cname = {};
-    if (this.props.current === "start" || !this.props.hasSID) {
+    if (this.props.current === "start" || !this.props.isActivated) {
       return React.createElement("div", {
         "className": "ui top fixed inverted menu"
       });
@@ -20649,7 +20688,7 @@ this.Menu = (function(superClass) {
 
 })(React.Component);
 
-},{"react":178}],182:[function(require,module,exports){
+},{"react":178}],183:[function(require,module,exports){
 var React,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -20693,22 +20732,33 @@ this.Payment = (function(superClass) {
   Payment.prototype.componentWillUnmount = function() {};
 
   Payment.prototype.onSubmit = function(e) {
-    var d, date, i, len, ref, sid, user, val;
+    var am, amount, d, date, i, j, k, len, len1, ref, ref1, sid, sign, user, v, val;
     e.preventDefault();
     val = [];
     d = $(".ui.form").form("get values");
     date = this.state.useDate ? d.year + "/" + d.month + "/" + d.date : null;
+    amount = Math.floor(this.state.amount / this.state.user.length);
     ref = this.state.user;
-    for (i = 0, len = ref.length; i < len; i++) {
-      user = ref[i];
-      val.push([user, this.props.users[user], this.state.target, Math.floor(this.state.amount / this.state.user.length), date]);
+    for (j = 0, len = ref.length; j < len; j++) {
+      user = ref[j];
+      val.push([user, this.props.users[user], this.state.target, amount, date]);
     }
     sid = Cookies.get("sid");
-    return insertRaws(sid, this.props.sheet.sheetId, 0, 1, (function(_this) {
+    insertRows(sid, this.props.sheets[1].sheetId, 0, 1, (function(_this) {
       return function() {
-        return insertData(sid, _this.props.sheet.title + "!A1", val);
+        return insertData(sid, _this.props.sheets[1].title + "!A1", val);
       };
     })(this));
+    am = this.state.amount / this.props.users.length;
+    i = 0;
+    v = [];
+    ref1 = this.props.users;
+    for (k = 0, len1 = ref1.length; k < len1; k++) {
+      user = ref1[k];
+      sign = +this.state.user.includes((i++).toString()) ? 1 : 0;
+      v.push(am - sign * amount);
+    }
+    return this.props.Action.setAmount(v);
   };
 
   Payment.prototype.onChange = function() {
@@ -20737,9 +20787,9 @@ this.Payment = (function(superClass) {
     now = new Date();
     date = this.state.date;
     year = (function() {
-      var i, results;
+      var j, results;
       results = [];
-      for (y = i = 0; i <= 10; y = ++i) {
+      for (y = j = 0; j <= 10; y = ++j) {
         yy = +now.getFullYear() - y;
         results.push(React.createElement("option", {
           "value": yy
@@ -20748,9 +20798,9 @@ this.Payment = (function(superClass) {
       return results;
     })();
     month = (function() {
-      var i, results;
+      var j, results;
       results = [];
-      for (m = i = 1; i <= 12; m = ++i) {
+      for (m = j = 1; j <= 12; m = ++j) {
         results.push(React.createElement("option", {
           "value": m
         }, m));
@@ -20759,9 +20809,9 @@ this.Payment = (function(superClass) {
     })();
     l = (new Date(+date.getFullYear(), date.getMonth() + 1, 0)).getDate();
     day = (function() {
-      var i, ref1, results;
+      var j, ref1, results;
       results = [];
-      for (d = i = 1, ref1 = l; 1 <= ref1 ? i <= ref1 : i >= ref1; d = 1 <= ref1 ? ++i : --i) {
+      for (d = j = 1, ref1 = l; 1 <= ref1 ? j <= ref1 : j >= ref1; d = 1 <= ref1 ? ++j : --j) {
         results.push(React.createElement("option", {
           "value": d
         }, d));
@@ -20858,8 +20908,8 @@ this.Payment = (function(superClass) {
 
 })(React.Component);
 
-},{"react":178}],183:[function(require,module,exports){
-var Data, Files, Menu, Payment, React, ReactDOM, Top,
+},{"react":178}],184:[function(require,module,exports){
+var Clearing, Data, Files, Menu, Payment, React, ReactDOM, Top,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   hasProp = {}.hasOwnProperty;
@@ -20876,12 +20926,15 @@ Data = require('./data.js').Data;
 
 Payment = require('./payment.js').Payment;
 
+Clearing = require('./clearing.js').Clearing;
+
 Top = (function(superClass) {
   extend(Top, superClass);
 
   function Top(props) {
     this.changeCurrent = bind(this.changeCurrent, this);
     this.setId = bind(this.setId, this);
+    this.setAmount = bind(this.setAmount, this);
     var sid;
     Top.__super__.constructor.call(this, props);
     sid = Cookies.get("sid");
@@ -20909,21 +20962,38 @@ Top = (function(superClass) {
     }
     return getSpreadSheets(sid, (function(_this) {
       return function(sheets, f) {
-        var amount, i, len, ref, user, users;
+        var amount, j, len, ref, user, users;
         console.log(f);
         users = [];
         amount = [];
         ref = f[0].result.values;
-        for (i = 0, len = ref.length; i < len; i++) {
-          user = ref[i];
+        for (j = 0, len = ref.length; j < len; j++) {
+          user = ref[j];
           users.push(user[0]);
-          amount.push(user[1]);
+          amount.push(user[1] != null ? user[1] : 0);
         }
         return _this.setState({
           sheets: sheets,
           users: users,
           data: f[1].result.values,
           amount: amount
+        });
+      };
+    })(this));
+  };
+
+  Top.prototype.setAmount = function(arr) {
+    var am, i, j, len, v;
+    am = [];
+    i = 0;
+    for (j = 0, len = arr.length; j < len; j++) {
+      v = arr[j];
+      am.push(+this.state.amount[i++] + +v);
+    }
+    return updateColumns(this.state.sid, this.state.sheets[0].title + "!B1", [am], (function(_this) {
+      return function() {
+        return _this.setState({
+          amount: am
         });
       };
     })(this));
@@ -20972,7 +21042,6 @@ Top = (function(superClass) {
   Top.prototype.render = function() {
     var items;
     items = (function() {
-      var ref;
       switch (this.state.current) {
         case "start":
           return [
@@ -21017,7 +21086,17 @@ Top = (function(superClass) {
           return [
             React.createElement(Payment, {
               "users": this.state.users,
-              "sheet": ((ref = this.state.sheets) != null ? ref[1] : void 0)
+              "sheets": this.state.sheets,
+              "Action": {
+                setAmount: this.setAmount
+              }
+            })
+          ];
+        case "clearing":
+          return [
+            React.createElement(Clearing, {
+              "users": this.state.users,
+              "amount": this.state.amount
             })
           ];
       }
@@ -21025,11 +21104,11 @@ Top = (function(superClass) {
     return React.createElement("div", {
       "style": {
         "margin": "3em",
-        "margin-top": "7em"
+        "marginTop": "7em"
       }
     }, React.createElement(Menu, {
       "current": this.state.current,
-      "hasSID": (this.state.sid != null),
+      "isActivated": (this.state.sheets != null),
       "onclick": this.changeCurrent
     }), items);
   };
@@ -21042,4 +21121,4 @@ window.onload = function() {
   return ReactDOM.render(React.createElement(Top, null), document.getElementById('contents'));
 };
 
-},{"./data.js":179,"./files.js":180,"./menu.js":181,"./payment.js":182,"react":178,"react-dom":25}]},{},[183]);
+},{"./clearing.js":179,"./data.js":180,"./files.js":181,"./menu.js":182,"./payment.js":183,"react":178,"react-dom":25}]},{},[184]);
